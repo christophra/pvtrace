@@ -1844,8 +1844,12 @@ def _import_module(module_name, warn=True, prefix='_py_', ignore='_'):
             globals()[attr] = getattr(module, attr)
         return True
 
-
-_import_module('_transformations')
+#-------------------------------------------------------------------------------
+# This fails since no module _transformations exists
+#_import_module('_transformations')
+# Instead import the actual module (== this file)
+_import_module('transformations')
+#-------------------------------------------------------------------------------
 
 # Documentation in HTML format can be generated with Epydoc
 __docformat__ = "restructuredtext en"

@@ -2,13 +2,14 @@ from __future__ import division
 import numpy as np
 from pvtrace.external import transformations as tf
 from pvtrace import *
+from glob import glob
 
 ''' Simulation of an LSC stack with 2 layers
 
 Steps:
 1) Define sizes
 2) Create a light source
-3) Load absorption and emission data for orgnaic dye
+3) Load absorption and emission data for organic dye
 4) Load linear background absorption for PMMA
 5) Create LSC object and start tracer
 6) Calculate statistics.
@@ -47,21 +48,30 @@ pmma = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, 
 
 # 5) Make the LSC and give it both dye and pmma materials
 lsc_bottom = LSC(origin=(0,0,0), size=(L,W,H))
-lsc_bottom.material = CompositeMaterial([pmma, red_layer])
+lsc_bottom.material = CompositeMaterial([pmma, red_layer], refractive_index=1.5)
 lsc_bottom.name = "LSC BOT"
 
 lsc_top = LSC(origin=(0,0,H+0.001), size=(L,W,H))
-lsc_top.material = CompositeMaterial([pmma, green_layer])
+lsc_top.material = CompositeMaterial([pmma, green_layer], refractive_index=1.5)
 lsc_top.name = "LSC TOP"
 
 # Ask python that the directory of this script file is and use it as the location of the database file
 pwd = os.getcwd()
-dbfile = os.path.join(pwd, 'stack_db1.sql') # <--- the name of the database file
+# Automatically write new database file with incremented number
+def new_dbfile_name(pwd,prefix):
+    from glob import glob
+    existing_dbfiles = glob(os.path.join(pwd, prefix+'_db*.sql'))
+    existing_dbfiles_index = [int(filter(str.isdigit,dbf.split('_')[-1])) for dbf in existing_dbfiles]
+    existing_dbfiles_index.append(0) # so that first created file gets index=1
+    dbfile_index = max(existing_dbfiles_index)+1
+    dbfile = os.path.join(pwd, prefix+'_db%d.sql'%dbfile_index) # <--- the name of the database file
+    return dbfile
+dbfile = new_dbfile_name(pwd,'stack')
 
 scene = Scene()
 scene.add_object(lsc_bottom)
 scene.add_object(lsc_top)
-trace = Tracer(scene=scene, source=source, seed=None, database_file=dbfile, throws=250, use_visualiser=True, show_log=False)
+trace = Tracer(scene=scene, source=source, seed=None, database_file=dbfile, throws=100, use_visualiser=False, show_log=False)
 trace.show_lines = True
 trace.show_path = True
 import time
@@ -104,6 +114,3 @@ for surface in edges:
 
 for surface in apertures:
     print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, solar=True))/thrown * 100, "%"
-
-
-

@@ -2,7 +2,7 @@ from __future__ import division
 import numpy as np
 from pvtrace import *
 from pvtrace.external import transformations as tf
-
+from glob import glob
 
 scene = Scene()
 L = 0.05
@@ -12,6 +12,7 @@ S = 0.01
 T = 0.0001
 lsc = LSC(origin=(0,0,S), size=(L,W,T))
 absorption_data = np.loadtxt(os.path.join(PVTDATA,"dyes", "lr300.abs.txt"))
+print "Absorption data = ", os.path.join(PVTDATA,"dyes", "lr300.abs.txt")
 T_need = 0.05 # Want to transmit 5% of the light at the peak absorption wavelength
 ap = absorption_data[:,1].max()
 phi = -1/(ap*(T)) * np.log(T_need)
@@ -24,7 +25,7 @@ emission_data = np.loadtxt(os.path.join(PVTDATA,"dyes", "lr300.ems.txt"))
 emission = Spectrum(x=emission_data[:,0], y=emission_data[:,1])
 linbackgrd = Material(absorption_data=Spectrum(x=[300.,1000.], y=[0.3,0.3]), refractive_index = 1.5, quantum_efficiency=0.)
 dopant = Material(absorption_data=absorption, emission_data=emission, quantum_efficiency=.95, refractive_index=1.5)
-lsc.material = CompositeMaterial([linbackgrd, dopant])
+lsc.material = CompositeMaterial([linbackgrd, dopant], refractive_index=1.5)
 lsc.name = "FILM"
 film = lsc
 scene.add_object(film)
@@ -46,5 +47,3 @@ trace = Tracer(scene=scene, source=source, seed=None, throws=10000, use_visualis
 trace.show_lines = True
 trace.show_path = True
 trace.start()
-
-

@@ -2,13 +2,14 @@ from __future__ import division
 import numpy as np
 from pvtrace.external import transformations as tf
 from pvtrace import *
+from glob import glob
 
 ''' Simulation of a rectangular homogeneously doped LSC
 
 Steps:
 1) Define sizes
 2) Create a light source
-3) Load absorption and emission data for orgnaic dye
+3) Load absorption and emission data for organic dye
 4) Load linear background absorption for PMMA
 5) Create LSC object and start tracer
 6) Calculate statistics.
@@ -40,16 +41,25 @@ pmma = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, 
 
 # 5) Make the LSC and give it both dye and pmma materials
 lsc = LSC(origin=(0,0,0), size=(L,W,H))
-lsc.material = CompositeMaterial([pmma, fluro_red])
+lsc.material = CompositeMaterial([pmma, fluro_red], refractive_index=1.5)
 lsc.name = "LSC"
 scene = Scene()
 scene.add_object(lsc)
 
 # Ask python that the directory of this script file is and use it as the location of the database file
 pwd = os.getcwd()
-dbfile = os.path.join(pwd, 'homogen_db2.sql') # <--- the name of the database file
+# Automatically write new database file with incremented number
+def new_dbfile_name(pwd,prefix):
+    from glob import glob
+    existing_dbfiles = glob(os.path.join(pwd, prefix+'_db*.sql'))
+    existing_dbfiles_index = [int(filter(str.isdigit,dbf.split('_')[-1])) for dbf in existing_dbfiles]
+    existing_dbfiles_index.append(0) # so that first created file gets index=1
+    dbfile_index = max(existing_dbfiles_index)+1
+    dbfile = os.path.join(pwd, prefix+'_db%d.sql'%dbfile_index) # <--- the name of the database file
+    return dbfile
+dbfile = new_dbfile_name(pwd,'homogen')
 
-trace = Tracer(scene=scene, source=source, seed=1, throws=250, database_file=dbfile, use_visualiser=True, show_log=False)
+trace = Tracer(scene=scene, source=source, seed=1, throws=1000, database_file=dbfile, use_visualiser=True, show_log=False)
 trace.show_lines = True
 trace.show_path = True
 import time
@@ -92,6 +102,3 @@ for surface in edges:
 
 for surface in apertures:
     print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, solar=True))/thrown * 100, "%"
-
-
-
