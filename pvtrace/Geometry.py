@@ -1300,7 +1300,7 @@ class Sphere(object):
         return False
             
 class Convex(object):
-    """docstring for Convex"""
+    """Convex hull of a set of points, defined as a set of triangles with the Quickhull algorithm."""
     def __init__(self, points):
         super(Convex, self).__init__()
         self.points = points
