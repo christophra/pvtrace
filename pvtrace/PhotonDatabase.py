@@ -43,7 +43,7 @@ def itemise(array):
     return new
         
 class PhotonDatabase(object):
-    """An object the wraps a mysql database.
+    """An object that wraps a mysql database.
     """
     def __init__(self, dbfile=None):
         super(PhotonDatabase, self).__init__()
@@ -189,9 +189,9 @@ class PhotonDatabase(object):
         return filtered_keys
         
     def surfaces_with_records(self):
-        """Returns surfaces that have been hit by a ray for all exiting objects."""
+        """Returns surfaces that have been hit by a ray for all existing objects."""
         keys = self.cursor.execute('SELECT DISTINCT surface_id FROM state WHERE uid IN (SELECT uid FROM surface_normal WHERE uid IN (SELECT MAX(uid) FROM photon GROUP BY pid));').fetchall()
-        keys = itemise(objects_keys)
+        keys = itemise(keys)
         filtered_keys = []
         # Surface record will often be None because event occur away from surface (i.e. absorption emission)
         # Here we are remove 'None' from the list, and also converting unicode strings to strings.
@@ -200,9 +200,10 @@ class PhotonDatabase(object):
                 filtered_keys.append(str(key))
         return filtered_keys
     
-    def surfaces_with_records_for_object(object):
+    def surfaces_with_records_for_object(self, object):
         """Returns a list of surface to 'object' that have been hit by a ray."""
         keys = itemise(self.cursor.execute('SELECT DISTINCT surface_id FROM state WHERE uid IN (SELECT uid FROM surface_normal WHERE uid IN (SELECT MAX(uid) FROM photon GROUP BY pid)) INTERSECT SELECT DISTINCT surface_id FROM state WHERE container_obj=?;', (object,)).fetchall())
+        return keys
         
     def surface_normal_for_surface(self, surface_id, position_on_surface=None):
         """Returns a surface normal (vector) for a specified surface_id. If the surface is curved, you will need to specify the point on the surface."""
